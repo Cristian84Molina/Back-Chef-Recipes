@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import recipeRoutes from "../routes/recipes.js";
+import recipeRoutes from "./routes/recipes.js";
 import path from "path";
 
 const app = express();
