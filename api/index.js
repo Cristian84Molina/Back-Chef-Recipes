@@ -4,10 +4,17 @@ import recipeRoutes from "../routes/recipes.js";
 
 const app = express();
 
-app.use(cors());
 app.use(express.json());
 
-// rutas
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://front-chef-recipes.vercel.app"
+    ],
+  })
+);
+
 app.use("/api/recipes", recipeRoutes);
 
 export default app;
