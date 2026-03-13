@@ -1,4 +1,3 @@
-// api/index.js
 import express from "express";
 import cors from "cors";
 import recipeRoutes from "../routes/recipes.js";
@@ -9,18 +8,18 @@ const app = express();
 // Middleware para parsear JSON
 app.use(express.json());
 
-// CORS
+// CORS global
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://front-chef-recipes.vercel.app"
+      "https://front-chef-recipes.vercel.app",
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
 
-// Servir carpeta uploads para imágenes
+// Servir carpeta uploads solo si quieres imágenes locales (en serverless no se guardan)
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // Rutas de recetas
