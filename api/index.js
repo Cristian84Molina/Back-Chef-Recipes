@@ -12,6 +12,7 @@ app.use(
       "http://localhost:5173",
       "https://front-chef-recipes.vercel.app"
     ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
 
