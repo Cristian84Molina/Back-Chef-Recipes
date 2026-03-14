@@ -1,8 +1,17 @@
 import express from "express";
 import { pool } from "../db.js";
 import multer from "multer";
+import { v2 as cloudinary} from "cloudinary"
+
+
+
 const upload = multer({ storage: multer.memoryStorage() });
 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 const router = express.Router();
 
 // 🟢 Importante: /search antes de /:id
@@ -48,11 +57,32 @@ router.get("/:id", async (req, res) => {
 router.post("/", upload.single("photo"), async (req, res) => {
   try {
     const { name, category, type, ingredients, description } = req.body;
-    const result = await pool.query(
-      "INSERT INTO recipes (name, category, type, ingredients, description, image) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
-      [name, category, type, ingredients, description, null]
+
+    let imageUrl = null;
+
+    // Si hay imagen la subimos a Cloudinary
+    if (req.file) {
+      const result = await new Promise((resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream({ folder: "recipes" }, (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          })
+          .end(req.file.buffer);
+      });
+
+      imageUrl = result.secure_url;
+    }
+
+    const dbResult = await pool.query(
+      `INSERT INTO recipes (name, category, type, ingredients, description, image)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       RETURNING *`,
+      [name, category, type, ingredients, description, imageUrl]
     );
-    res.json(result.rows[0]);
+
+    res.json(dbResult.rows[0]);
+
   } catch (err) {
     console.error(err);
     res.status(500).send("Error guardando receta");
