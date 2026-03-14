@@ -1,3 +1,4 @@
+
 import express from "express";
 import { pool } from "../db.js";
 import multer from "multer";
@@ -7,11 +8,7 @@ import { v2 as cloudinary} from "cloudinary"
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+
 const router = express.Router();
 
 // 🟢 Importante: /search antes de /:id
@@ -55,6 +52,11 @@ router.get("/:id", async (req, res) => {
 
 // Guardar receta
 router.post("/", upload.single("photo"), async (req, res) => {
+  cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
   try {
     const { name, category, type, ingredients, description } = req.body;
 
