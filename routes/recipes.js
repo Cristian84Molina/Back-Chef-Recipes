@@ -92,14 +92,43 @@ router.post("/", upload.single("photo"), async (req, res) => {
 });
 
 // Actualizar receta
-router.put("/:id", async (req, res) => {
+router.put("/:id", upload.single("photo"), async (req, res) => {
+  const { id } = req.params;
+  const { name, category, type, ingredients, description } = req.body;
+
+  // Volvemos a configurar Cloudinary por seguridad en Vercel
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure: true
+  });
+
   try {
-    const { id } = req.params;
-    const { name, category, type, ingredients, description } = req.body;
-    const result = await pool.query(
-      "UPDATE recipes SET name=$1, category=$2, type=$3, ingredients=$4, description=$5 WHERE id=$6 RETURNING *",
-      [name, category, type, ingredients, description, id]
-    );
+    let imageUrl = null;
+
+    // Si viene una foto nueva, la subimos
+    if (req.file) {
+      const result = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream({ folder: "recipes" }, (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }).end(req.file.buffer);
+      });
+      imageUrl = result.secure_url;
+    }
+
+    // Construimos la query dinámicamente: si no hay foto nueva, no sobreescribimos la vieja
+    const query = imageUrl 
+      ? "UPDATE recipes SET name=$1, category=$2, type=$3, ingredients=$4, description=$5, image=$6 WHERE id=$7 RETURNING *"
+      : "UPDATE recipes SET name=$1, category=$2, type=$3, ingredients=$4, description=$5 WHERE id=$6 RETURNING *";
+
+    const values = imageUrl 
+      ? [name, category, type, ingredients, description, imageUrl, id]
+      : [name, category, type, ingredients, description, id];
+
+    const result = await pool.query(query, values);
+
     if (result.rows.length === 0) return res.status(404).send("Receta no encontrada");
     res.json(result.rows[0]);
   } catch (err) {
