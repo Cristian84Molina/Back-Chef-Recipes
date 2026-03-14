@@ -1,5 +1,7 @@
 import express from "express";
 import { pool } from "../db.js";
+import multer from "multer";
+const upload = multer({ storage: multer.memoryStorage() });
 
 const router = express.Router();
 
@@ -43,7 +45,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Guardar receta
-router.post("/", async (req, res) => {
+router.post("/", upload.single("photo"), async (req, res) => {
   try {
     const { name, category, type, ingredients, description } = req.body;
     const result = await pool.query(
