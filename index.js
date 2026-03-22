@@ -2,11 +2,15 @@ import express from "express";
 import cors from "cors";
 import recipeRoutes from "./routes/recipes.js";
 import path from "path";
+import userRoutes from "./routes/users.js";
 
 const app = express();
 
 // Middleware para parsear JSON
 app.use(express.json());
+
+
+app.use("/api/users", userRoutes);
 
 // CORS global
 app.use(

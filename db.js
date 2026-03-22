@@ -7,3 +7,4 @@ export const pool = new Pool({
     rejectUnauthorized: false, // necesario para Neon o bases remotas
   },
 });
+
