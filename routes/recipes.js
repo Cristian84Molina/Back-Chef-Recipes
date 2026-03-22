@@ -34,11 +34,19 @@ router.get("/search", async (req, res) => {
 });
 
 // ======================
-// 📄 Traer todas las recetas públicas
+// 📄 Traer todas las recetas públicas y privadas propias
 // ======================
-router.get("/", async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM recipes WHERE is_public = true");
+    const userId = req.user.id;
+
+    // Devuelve: públicas de todos + privadas del propio usuario
+    const result = await pool.query(
+      `SELECT * FROM recipes 
+       WHERE is_public = true OR user_id = $1`,
+      [userId]
+    );
+
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -66,19 +74,6 @@ router.get("/:id", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Error trayendo receta");
-  }
-});
-
-// ======================
-// 📄 Traer recetas del usuario logueado
-// ======================
-router.get("/my", authMiddleware, async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM recipes WHERE user_id=$1", [req.user.id]);
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error trayendo tus recetas");
   }
 });
 
